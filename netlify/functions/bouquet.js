@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+const { createClient } = require("@supabase/supabase-js");
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
@@ -7,27 +7,11 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-import { createClient } from "@supabase/supabase-js";
-
-export const handler = async (event) => {
+exports.handler = async (event) => {
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      realtime: {
-        enabled: false
-      },
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false
-      },
-      global: {
-        headers: {
-          "x-application-name": "netlify-function"
-        }
-      }
-    }
+    process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 
   if (event.httpMethod === "OPTIONS") {
@@ -53,25 +37,9 @@ export const handler = async (event) => {
     if (event.httpMethod === "POST") {
       const { name, gift, message } = JSON.parse(event.body);
 
-      if (!name?.trim() || !message?.trim()) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({
-            error: "Name and message are required",
-          }),
-        };
-      }
-
       const { data, error } = await supabase
         .from("bouquet_entries")
-        .insert([
-          {
-            name: name.trim(),
-            gift: gift || "Holy Mass",
-            message: message.trim(),
-          },
-        ])
+        .insert([{ name, gift, message }])
         .select()
         .single();
 
@@ -84,19 +52,11 @@ export const handler = async (event) => {
       };
     }
 
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed" }),
-    };
-
   } catch (err) {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({
-        error: err.message,
-      }),
+      body: JSON.stringify({ error: err.message }),
     };
   }
 };
