@@ -13,6 +13,9 @@ export const handler = async (event) => {  // ✅ FIXED HERE
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
+      auth: {
+        persistSession: false
+      },
       realtime: { enabled: false }
     }
   );
@@ -86,4 +89,3 @@ export const handler = async (event) => {  // ✅ FIXED HERE
     };
   }
 };
-``
