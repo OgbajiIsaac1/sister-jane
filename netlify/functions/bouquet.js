@@ -13,7 +13,12 @@ export const handler = async (event) => {  // ✅ FIXED HERE
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
-      realtime: { enabled: false }
+      auth: {
+        persistSession: false
+      },
+      realtime: {
+        enabled: false
+      }
     }
   );
 
