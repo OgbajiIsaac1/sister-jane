@@ -1,7 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { C, IMG, NAV, GIFT_ICON, GIFTS, WA_LINK, WA_SVG, SACRED_DATES, RSVP_CONTACTS, FORMATION, SERVICE_PILLARS, ANGEL_WING_L, ANGEL_WING_R, ANGEL_SMALL } from "./constants.jsx";
 import SR_JANE from "./Sr. Jane.jpeg";
-import { fetchBouquet, submitBouquet, fetchGuestbook, submitGuestbook } from "./lib/supabase.js";
+import {
+  fetchBouquet,
+  fetchGuestbook,
+  submitBouquet as saveBouquet,
+  submitGuestbook as saveGuestbook,
+} from "./lib/supabase.js";
 import "./App.css";
 
 export default function App() {
@@ -41,6 +46,15 @@ export default function App() {
     }, 260);
   }, [page]);
 
+  const updateNavFade = useCallback((el) => {
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setNavScroll({
+      left: scrollLeft > 4,
+      right: scrollLeft + clientWidth < scrollWidth - 4,
+    });
+  }, []);
+
   // ── Auto-scroll active tab into view + fade overlay tracking ──
   useEffect(() => {
     const el = navInnerRef.current;
@@ -48,20 +62,11 @@ export default function App() {
     const active = el.querySelector(".nbtn.active");
     if (active) active.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     updateNavFade(el);
-  }, [page]);
+  }, [page, updateNavFade]);
 
   const onNavScroll = useCallback(() => {
     updateNavFade(navInnerRef.current);
-  }, []);
-
-  function updateNavFade(el) {
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setNavScroll({
-      left: scrollLeft > 4,
-      right: scrollLeft + clientWidth < scrollWidth - 4,
-    });
-  }
+  }, [updateNavFade]);
 
   // ── Fetch entries from API on mount ──
   useEffect(() => {
@@ -74,11 +79,13 @@ export default function App() {
     e.preventDefault();
     if (!bouquetForm.name.trim() || !bouquetForm.message.trim()) return;
     try {
-      const entry = await submitBouquet(bouquetForm);
+      const entry = await saveBouquet(bouquetForm);
       setBouquetEntries((prev) => [entry, ...prev]);
       setBouquetForm({ name: "", gift: "Holy Mass", message: "" });
       setBouquetOk(true);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to submit bouquet", error);
+    }
     setTimeout(() => setBouquetOk(false), 3500);
   };
 
@@ -86,11 +93,13 @@ export default function App() {
     e.preventDefault();
     if (!guestbookForm.name.trim() || !guestbookForm.message.trim()) return;
     try {
-      const entry = await submitGuestbook(guestbookForm);
+      const entry = await saveGuestbook(guestbookForm);
       setGuestbookEntries((prev) => [entry, ...prev]);
       setGuestbookForm({ name: "", message: "" });
       setGuestbookOk(true);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to submit guestbook", error);
+    }
     setTimeout(() => setGuestbookOk(false), 3500);
   };
 

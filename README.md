@@ -1,16 +1,30 @@
-# React + Vite
+# Sr. Jane Celebration Site
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite frontend with Vercel API routes for bouquet and guestbook entries.
 
-Currently, two official plugins are available:
+## Deploy on Vercel
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Push this project to GitHub.
+2. In Vercel, choose **Add New > Project** and import the GitHub repository.
+3. Use these build settings:
+   - Framework Preset: **Vite**
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+4. Add these environment variables in **Project Settings > Environment Variables**:
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+5. Deploy.
 
-## React Compiler
+The frontend calls `/api/bouquet` and `/api/guestbook`. Vercel serves those from:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `api/bouquet.js`
+- `api/guestbook.js`
 
-## Expanding the ESLint configuration
+## Local Development
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Copy `.env.example` to `.env` and fill in the Supabase values.
+
+```bash
+npm run dev
+npm run build
+```
