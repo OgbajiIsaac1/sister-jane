@@ -1,5 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
-
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
@@ -7,41 +5,24 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-import { createClient } from "@supabase/supabase-js";
-
-export const handler = async (event) => {
-
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      realtime: {
-        enabled: false
-      },
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false
-      },
-      global: {
-        headers: {
-          "x-application-name": "netlify-function"
-        }
-      }
-    }
-  );
+exports.handler = async (event) => {
+  const url = `${process.env.SUPABASE_URL}/rest/v1/bouquet_entries`;
 
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers };
   }
 
   try {
+    // ✅ GET
     if (event.httpMethod === "GET") {
-      const { data, error } = await supabase
-        .from("bouquet_entries")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const res = await fetch(url + "?select=*", {
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      });
 
-      if (error) throw error;
+      const data = await res.json();
 
       return {
         statusCode: 200,
@@ -50,32 +31,26 @@ export const handler = async (event) => {
       };
     }
 
+    // ✅ POST
     if (event.httpMethod === "POST") {
       const { name, gift, message } = JSON.parse(event.body);
 
-      if (!name?.trim() || !message?.trim()) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({
-            error: "Name and message are required",
-          }),
-        };
-      }
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify({
+          name,
+          gift,
+          message,
+        }),
+      });
 
-      const { data, error } = await supabase
-        .from("bouquet_entries")
-        .insert([
-          {
-            name: name.trim(),
-            gift: gift || "Holy Mass",
-            message: message.trim(),
-          },
-        ])
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await res.json();
 
       return {
         statusCode: 201,
@@ -84,19 +59,11 @@ export const handler = async (event) => {
       };
     }
 
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: "Method not allowed" }),
-    };
-
   } catch (err) {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({
-        error: err.message,
-      }),
+      body: JSON.stringify({ error: err.message }),
     };
   }
 };
