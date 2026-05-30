@@ -7,23 +7,21 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-export const handler = async (event) => {
-  // ✅ create client inside handler
+export const handler = async (event) => {  // ✅ FIXED HERE
+
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
-      realtime: { enabled: false } // 🔥 FIXES NETLIFY CRASH
+      realtime: { enabled: false }
     }
   );
 
-  // ✅ CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers };
   }
 
   try {
-    // ✅ GET entries
     if (event.httpMethod === "GET") {
       const { data, error } = await supabase
         .from("guestbook_entries")
@@ -39,7 +37,6 @@ export const handler = async (event) => {
       };
     }
 
-    // ✅ POST new message
     if (event.httpMethod === "POST") {
       const { name, message } = JSON.parse(event.body);
 
@@ -89,3 +86,4 @@ export const handler = async (event) => {
     };
   }
 };
+``
