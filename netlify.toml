@@ -3,6 +3,9 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[functions]
+  node_bundler = "esbuild"   # ✅ THIS FIXES THE ERROR
+
 [build.environment]
   NODE_VERSION = "20"
 
