@@ -1,10 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
-
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
@@ -13,11 +8,22 @@ const headers = {
 };
 
 export const handler = async (event) => {
+  // ✅ Create client INSIDE handler
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      realtime: { enabled: false } // 🔥 FIXES YOUR CRASH
+    }
+  );
+
+  // ✅ Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers };
   }
 
   try {
+    // ✅ GET (fetch entries)
     if (event.httpMethod === "GET") {
       const { data, error } = await supabase
         .from("bouquet_entries")
@@ -25,31 +31,62 @@ export const handler = async (event) => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return { statusCode: 200, headers, body: JSON.stringify(data) };
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data),
+      };
     }
 
+    // ✅ POST (insert entry)
     if (event.httpMethod === "POST") {
       const { name, gift, message } = JSON.parse(event.body);
+
       if (!name?.trim() || !message?.trim()) {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: "Name and message are required" }),
+          body: JSON.stringify({
+            error: "Name and message are required",
+          }),
         };
       }
 
       const { data, error } = await supabase
         .from("bouquet_entries")
-        .insert([{ name: name.trim(), gift: gift || "Holy Mass", message: message.trim() }])
+        .insert([
+          {
+            name: name.trim(),
+            gift: gift || "Holy Mass",
+            message: message.trim(),
+          },
+        ])
         .select()
         .single();
 
       if (error) throw error;
-      return { statusCode: 201, headers, body: JSON.stringify(data) };
+
+      return {
+        statusCode: 201,
+        headers,
+        body: JSON.stringify(data),
+      };
     }
 
-    return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: "Method not allowed" }),
+    };
+
   } catch (err) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: err.message,
+      }),
+    };
   }
 };
