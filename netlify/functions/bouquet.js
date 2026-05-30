@@ -7,23 +7,21 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-export const handler = async (event) => {
-  // ✅ Create client INSIDE handler
+export const handler = async (event) => {  // ✅ FIXED HERE
+
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
-      realtime: { enabled: false } // 🔥 FIXES YOUR CRASH
+      realtime: { enabled: false }
     }
   );
 
-  // ✅ Handle CORS preflight
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers };
   }
 
   try {
-    // ✅ GET (fetch entries)
     if (event.httpMethod === "GET") {
       const { data, error } = await supabase
         .from("bouquet_entries")
@@ -39,7 +37,6 @@ export const handler = async (event) => {
       };
     }
 
-    // ✅ POST (insert entry)
     if (event.httpMethod === "POST") {
       const { name, gift, message } = JSON.parse(event.body);
 
