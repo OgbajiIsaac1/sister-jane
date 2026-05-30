@@ -7,16 +7,26 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-export const handler = async (event) => {  // ✅ FIXED HERE
+import { createClient } from "@supabase/supabase-js";
+
+export const handler = async (event) => {
 
   const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
-      auth: {
-        persistSession: false
+      realtime: {
+        enabled: false
       },
-      realtime: { enabled: false }
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      },
+      global: {
+        headers: {
+          "x-application-name": "netlify-function"
+        }
+      }
     }
   );
 
